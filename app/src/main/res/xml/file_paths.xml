@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Internal app storage -->
+    <files-path name="internal_files" path="." />
+    
+    <!-- Cache directory -->
+    <cache-path name="cache_files" path="." />
+    
+    <!-- External storage (if available) -->
+    <external-path name="external_files" path="." />
+    
+    <!-- External cache (if available) -->
+    <external-cache-path name="external_cache" path="." />
+    
+    <!-- Specific directories for VENOM components -->
+    <files-path name="models" path="models/" />
+    <files-path name="knowledge" path="knowledge/" />
+    <files-path name="logs" path="logs/" />
+    <files-path name="quarantine" path="quarantine/" />
+    <files-path name="checkpoints" path="checkpoints/" />
+</paths>
