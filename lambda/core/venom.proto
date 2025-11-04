@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package venom;
+
+// VENOM Lambda Services
+
+service VenomService {
+  rpc TimeWrap (TimeWrapRequest) returns (TimeWrapResponse);
+  rpc FractalTotal (FractalTotalRequest) returns (FractalTotalResponse);
+  rpc MobiusTime (MobiusTimeRequest) returns (MobiusTimeResponse);
+  rpc GravMode (GravModeRequest) returns (GravModeResponse);
+}
+
+message TimeWrapRequest {
+  double k = 1;
+  double p = 2;
+  double u = 3;
+  double t1 = 4;
+}
+
+message TimeWrapResponse {
+  double wrapped_time = 1;
+  string status = 2;
+}
+
+message FractalTotalRequest {
+  double s = 1;
+  double theta = 2;
+}
+
+message FractalTotalResponse {
+  double total_speedup = 1;
+  string status = 2;
+}
+
+message MobiusTimeRequest {
+  double s = 1;
+  double k = 2;
+  double p = 3;
+  double u = 4;
+  double theta = 5;
+}
+
+message MobiusTimeResponse {
+  double compressed_time = 1;
+  string status = 2;
+}
+
+message GravModeRequest {
+  double s = 1;
+  double theta = 2;
+  double k = 3;
+  double p = 4;
+  double u = 5;
+}
+
+message GravModeResponse {
+  double original = 1;
+  double compressed = 2;
+  double speedup = 3;
+  double theta = 4;
+  double efficiency = 5;
+  string status = 6;
+}

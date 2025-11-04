@@ -1,0 +1,24 @@
+# VENOM Λ-Genesis Python Dependencies
+
+# Web Framework and API
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# gRPC
+grpcio==1.59.3
+grpcio-tools==1.59.3
+protobuf==4.25.1
+
+# ML and Vector Search
+faiss-cpu==1.7.4
+numpy==1.24.3
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+
+# Utilities
+pydantic==2.5.2
+python-dotenv==1.0.0
