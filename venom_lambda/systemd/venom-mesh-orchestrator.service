@@ -6,7 +6,7 @@ Requires=venom-mesh-discovery.service
 [Service]
 Type=simple
 WorkingDirectory=%h/VENOM-Omega-Lambda
-ExecStart=/usr/bin/python3 -m lambda.core.venom_mesh_orchestrator
+ExecStart=/usr/bin/python3 -m venom_lambda.core.venom_mesh_orchestrator
 Restart=on-failure
 RestartSec=10s
 StandardOutput=journal

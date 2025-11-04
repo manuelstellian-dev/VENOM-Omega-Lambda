@@ -78,7 +78,7 @@ Gravitational mode calculation
 
 ## gRPC API
 
-See `lambda/core/venom.proto` for service definition.
+See `venom_lambda/core/venom.proto` for service definition.
 
 Generate client code:
 ```bash
@@ -110,7 +110,7 @@ organism.shutdown()
 ### Lambda Arbiter
 
 ```python
-from lambda.arbiter_core import LambdaArbiter
+from venom_lambda.arbiter_core import LambdaArbiter
 
 arbiter = LambdaArbiter()
 result = arbiter.time_wrap(health_data)
@@ -119,7 +119,7 @@ result = arbiter.time_wrap(health_data)
 ### Mesh Network
 
 ```python
-from lambda.mesh import Mesh
+from venom_lambda.mesh import Mesh
 
 mesh = Mesh()
 mesh.add_node("node-1", "generic")

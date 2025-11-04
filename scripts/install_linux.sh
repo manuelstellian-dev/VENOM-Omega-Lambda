@@ -30,7 +30,7 @@ echo ""
 echo "Installing systemd services..."
 mkdir -p ~/.config/systemd/user
 
-cp lambda/systemd/*.service ~/.config/systemd/user/
+cp venom_lambda/systemd/*.service ~/.config/systemd/user/
 
 # Update WorkingDirectory in service files
 REPO_DIR=$(pwd)

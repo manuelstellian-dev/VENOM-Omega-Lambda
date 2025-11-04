@@ -1,7 +1,7 @@
 """Tests for Mesh network"""
 
 import pytest
-from lambda.mesh import Mesh, NanoBot
+from venom_lambda.mesh import Mesh, NanoBot
 
 
 def test_mesh_creation():

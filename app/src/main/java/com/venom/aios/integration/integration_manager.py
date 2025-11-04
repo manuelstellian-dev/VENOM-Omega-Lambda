@@ -4,9 +4,9 @@ Interfaces with Android bridge layer
 """
 
 import logging
-from lambda.arbiter_core import LambdaArbiter
-from lambda.pulse import PulseFractal
-from lambda.mesh import Mesh
+from venom_lambda.arbiter_core import LambdaArbiter
+from venom_lambda.pulse import PulseFractal
+from venom_lambda.mesh import Mesh
 
 logger = logging.getLogger(__name__)
 

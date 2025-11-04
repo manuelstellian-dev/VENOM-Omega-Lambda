@@ -4,7 +4,7 @@ Demonstrates mesh network communication concepts
 """
 
 import asyncio
-from lambda.mesh import Mesh, NanoBot
+from venom_lambda.mesh import Mesh, NanoBot
 
 
 async def demo_mesh_network():

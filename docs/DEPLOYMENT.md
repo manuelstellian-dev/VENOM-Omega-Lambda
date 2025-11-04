@@ -36,7 +36,7 @@ FROM python:3.11-slim
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-COPY lambda/ ./lambda/
+COPY venom_lambda/ ./venom_lambda/
 CMD ["python", "-m", "lambda.core.venom_api"]
 ```
 

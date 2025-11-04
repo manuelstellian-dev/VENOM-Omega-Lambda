@@ -1,7 +1,7 @@
 """Tests for Fractal functions"""
 
 import pytest
-from lambda.core import fractal
+from venom_lambda.core import fractal
 
 
 def test_time_wrap():

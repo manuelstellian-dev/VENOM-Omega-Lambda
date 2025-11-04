@@ -1,7 +1,7 @@
 """Tests for Lambda Arbiter"""
 
 import pytest
-from lambda.arbiter_core import LambdaArbiter
+from venom_lambda.arbiter_core import LambdaArbiter
 
 
 def test_arbiter_initialization():

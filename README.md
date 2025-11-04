@@ -11,6 +11,7 @@ VENOM is a groundbreaking system that treats computation as a living organism:
 
 - **Ω-AIOS** (Omega): Android/Kotlin brain layer with decision-making, time compression, and hardware management
 - **Λ-Genesis** (Lambda): Python organ system with self-healing, optimization, and distributed mesh networking
+  - Package name: `venom_lambda` (lambda is a Python keyword)
 - **Ω ↔ Λ Bridge**: Seamless integration between layers using Chaquopy and JNI
 
 ### Key Features
@@ -127,7 +128,7 @@ cd lambda
 pytest -v
 
 # Start API server
-python -m lambda.core.venom_api
+python -m venom_lambda.core.venom_api
 
 # Test endpoints
 python examples/python_example.py
@@ -193,7 +194,7 @@ print(f"Compressed: {result['wrapped_time']}ms")
 ### Mesh Network
 
 ```python
-from lambda.mesh import Mesh
+from venom_lambda.mesh import Mesh
 
 mesh = Mesh()
 mesh.add_node("node-1", "memory_carrier")
@@ -273,7 +274,7 @@ VENOM-Omega-Lambda/
 │       │   └── tetrastrat/      # 4-cortex model
 │       ├── integration/         # Ω ↔ Λ bridge
 │       └── main/                # UI & orchestration
-├── lambda/                       # Λ-Genesis package
+├── venom_lambda/                       # Λ-Genesis package
 │   ├── arbiter_core/            # Coordinator
 │   ├── organs/                  # R, B, E, O cores
 │   ├── pulse/                   # Heartbeat system

@@ -5,8 +5,8 @@ set -e
 
 echo "🔧 Generating gRPC code from proto files..."
 
-PROTO_DIR="lambda/core"
-OUT_DIR="lambda/core"
+PROTO_DIR="venom_lambda/core"
+OUT_DIR="venom_lambda/core"
 
 # Check if grpcio-tools is installed
 if ! python3 -c "import grpc_tools" 2>/dev/null; then

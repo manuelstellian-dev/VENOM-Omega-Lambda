@@ -111,7 +111,7 @@ def main():
             print("⚠️  API may not be running properly\n")
     except requests.exceptions.ConnectionError:
         print("❌ Cannot connect to API. Is it running?")
-        print("Start with: python -m lambda.core.venom_api")
+        print("Start with: python -m venom_lambda.core.venom_api")
         return
     
     # Run demos
