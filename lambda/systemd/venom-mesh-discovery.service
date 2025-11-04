@@ -1,0 +1,15 @@
+[Unit]
+Description=VENOM Mesh Discovery Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/VENOM-Omega-Lambda
+ExecStart=/usr/bin/python3 -m lambda.core.mesh_discovery
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

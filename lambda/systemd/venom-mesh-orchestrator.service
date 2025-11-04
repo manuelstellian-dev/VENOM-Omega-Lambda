@@ -1,0 +1,16 @@
+[Unit]
+Description=VENOM Mesh Orchestrator Service
+After=network.target venom-mesh-discovery.service
+Requires=venom-mesh-discovery.service
+
+[Service]
+Type=simple
+WorkingDirectory=%h/VENOM-Omega-Lambda
+ExecStart=/usr/bin/python3 -m lambda.core.venom_mesh_orchestrator
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
