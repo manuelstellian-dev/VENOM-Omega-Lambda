@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VENOM Ω-Λ</string>
+    <string name="venom_title">VENOM Organism</string>
+    <string name="vitals_title">System Vitals</string>
+    <string name="theta_label">Theta (θ):</string>
+    <string name="lambda_label">Lambda (Λ):</string>
+    <string name="mesh_nodes_label">Mesh Nodes:</string>
+    <string name="cpu_health_label">CPU Health:</string>
+    <string name="memory_usage_label">Memory Usage:</string>
+    <string name="thermal_health_label">Thermal:</string>
+    <string name="battery_label">Battery:</string>
+    <string name="status_alive">ALIVE</string>
+    <string name="status_initializing">INITIALIZING</string>
+    <string name="chat_hint">Talk to VENOM…</string>
+    <string name="send">Send</string>
+    <string name="error_initialization">Failed to initialize VENOM organism</string>
+</resources>

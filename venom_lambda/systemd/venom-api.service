@@ -1,0 +1,17 @@
+[Unit]
+Description=VENOM Lambda API Service (FastAPI)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/VENOM-Omega-Lambda
+ExecStart=/usr/bin/python3 -m venom_lambda.core.venom_api
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+Environment="HOST=127.0.0.1"
+Environment="PORT=8000"
+
+[Install]
+WantedBy=default.target

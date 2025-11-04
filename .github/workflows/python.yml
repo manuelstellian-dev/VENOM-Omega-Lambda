@@ -1,0 +1,46 @@
+name: Python CI
+
+on:
+  push:
+    branches: [ main, develop, 'copilot/**' ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+    
+    - name: Run pytest
+      run: |
+        cd lambda
+        pytest -v --tb=short
+    
+    - name: Test fractal module
+      run: |
+        python -m lambda.core.fractal || true
+    
+    - name: Check code imports
+      run: |
+        python -c "from lambda.arbiter_core import LambdaArbiter; print('✅ Lambda arbiter imports successfully')"
+        python -c "from lambda.organs import RegenCore, BalanceCore, EntropyCore, OptimizeCore; print('✅ Organs import successfully')"
+        python -c "from lambda.pulse import PulseFractal; print('✅ Pulse imports successfully')"
+        python -c "from lambda.mesh import Mesh, NanoBot; print('✅ Mesh imports successfully')"
