@@ -103,6 +103,22 @@ class IntegrationManager:
         self.last_omega_heartbeat = 0.0
         self.last_lambda_heartbeat = 0.0
         
+        # --- Lambda Integration (Hybrid Extension) ---
+        try:
+            from pathlib import Path
+            import sys
+            sys.path.insert(0, str(Path(__file__).parent.parent / "lambda"))
+            from arbiter_core.arbiter import LambdaArbiter
+            from pulse.pulse import PulseFractal
+            from mesh.mesh import Mesh
+            from mesh.nanobot import NanoBot
+        except Exception as e:
+            logger.warning(f"Lambda modules not loaded: {e}")
+        self.arbiter = None
+        self.pulse = None
+        self.mesh = None
+        self.active = False
+    
         logger.info("IntegrationManager initialized")
         logger.info(f"  Ω endpoint: {omega_endpoint}")
         logger.info(f"  Λ endpoint: {lambda_endpoint}")
@@ -312,6 +328,99 @@ class IntegrationManager:
             "omega_queue_size": len(self.omega_to_lambda_queue),
             "lambda_queue_size": len(self.lambda_to_omega_queue)
         }
+
+    def initialize_lambda(self) -> bool:
+        """
+        Initialize Lambda components
+        Returns: True dacă reușește
+        """
+        try:
+            if self.arbiter is None:
+                self.arbiter = LambdaArbiter()
+                logger.info("✅ Lambda Arbiter initialized")
+            if self.mesh is None:
+                self.mesh = Mesh()
+                self.mesh.start()
+                logger.info("✅ Lambda Mesh started")
+            if self.pulse is None:
+                self.pulse = PulseFractal(self.arbiter)
+                self.pulse.start()
+                logger.info("✅ Lambda Pulse started")
+            self.active = True
+            return True
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Lambda: {e}")
+            return False
+
+    def populate_nanobots(self, count: int = 100):
+        """
+        Populate mesh with nanobots
+        """
+        if not self.mesh:
+            logger.error("Mesh not initialized")
+            return
+        try:
+            roles = ["memory_carrier", "signal_relay", "knowledge_keeper", "generic"]
+            for i in range(1, count + 1):
+                role = roles[i % len(roles)]
+                nanobot = NanoBot(f"nano_{i}", role)
+                self.mesh.add_node(f"nano_{i}", nanobot)
+            logger.info(f"✅ Populated {count} nanobots")
+        except Exception as e:
+            logger.error(f"Failed to populate nanobots: {e}")
+
+    def process_health_data(self, health_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Process health data from Omega
+        """
+        if not self.arbiter:
+            return {"error": "Lambda Arbiter not initialized"}
+        try:
+            results = self.arbiter.time_wrap(health_data)
+            logger.debug(f"Processed health data: score={results.get('integrated_score', 0):.3f}")
+            return results
+        except Exception as e:
+            logger.error(f"Error processing health data: {e}")
+            return {"error": str(e)}
+
+    def get_mesh_vitals(self) -> Dict[str, Any]:
+        """
+        Get mesh vitals
+        """
+        if not self.mesh:
+            return {"error": "Mesh not initialized"}
+        return self.mesh.get_vitals()
+
+    def get_pulse_vitals(self) -> Dict[str, Any]:
+        """
+        Get pulse vitals
+        """
+        if not self.pulse:
+            return {"error": "Pulse not initialized"}
+        return self.pulse.get_vitals()
+
+    def broadcast_message(self, sender: str, message: str):
+        """
+        Broadcast message through mesh
+        """
+        if not self.mesh:
+            logger.error("Mesh not initialized")
+            return
+        self.mesh.broadcast(sender, message)
+
+    def shutdown(self):
+        """
+        Shutdown Lambda components
+        """
+        try:
+            if self.pulse:
+                self.pulse.stop()
+            if self.mesh:
+                self.mesh.stop()
+            self.active = False
+            logger.info("🛑 Integration Manager shutdown complete")
+        except Exception as e:
+            logger.error(f"Shutdown error: {e}")
 
 
 # Global instance

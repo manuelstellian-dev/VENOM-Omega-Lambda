@@ -1,17 +1,37 @@
 [Unit]
-Description=VENOM Lambda API Service (FastAPI)
-After=network.target
+
+Description=VENOM Λ-Core API (REST + gRPC)
+Documentation=https://github.com/manuelstellian-dev/VENOM-Omega-Lambda
+After=network.target venom-fractal.service
+Requires=venom-fractal.service
 
 [Service]
+
 Type=simple
-WorkingDirectory=%h/VENOM-Omega-Lambda
-ExecStart=/usr/bin/python3 -m venom_lambda.core.venom_api
+User=%u
+WorkingDirectory=%h/venom/lambda/core
+ExecStart=%h/.local/bin/python3 venom-api.py
 Restart=on-failure
-RestartSec=10s
-StandardOutput=journal
-StandardError=journal
-Environment="HOST=127.0.0.1"
-Environment="PORT=8000"
+RestartSec=5
+
+# Resource limits
+MemoryMax=1G
+CPUQuota=100%
+
+# Logging
+StandardOutput=append:%h/venom/logs/api.log
+StandardError=append:%h/venom/logs/api.error.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Environment
+Environment=PYTHONUNBUFFERED=1
+Environment=VENOM_HOME=%h/venom
+Environment=VENOM_API_HOST=127.0.0.1
+Environment=VENOM_API_PORT=8000
+Environment=VENOM_GRPC_PORT=8443
 
 [Install]
 WantedBy=default.target

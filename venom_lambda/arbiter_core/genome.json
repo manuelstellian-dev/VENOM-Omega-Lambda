@@ -9,29 +9,72 @@
       "Λ": 0.05
     },
     "pulses": "fractal_parallel",
-    "description": "VENOM Λ-Genesis Genome Configuration",
+    "description": "ADN fractal cvadruplu - spirală biologică digitală",
     "version": "1.0.0",
-    "organs": {
-      "R": {
-        "name": "Regenerate Core",
-        "function": "Self-healing and damage repair",
-        "priority": "high"
-      },
-      "B": {
-        "name": "Balance Core",
-        "function": "Resource stabilization and conservation",
-        "priority": "high"
-      },
-      "E": {
-        "name": "Entropy Core",
-        "function": "Chaos engineering and defense",
-        "priority": "medium"
-      },
-      "O": {
-        "name": "Optimize Core",
-        "function": "Performance optimization and efficiency",
-        "priority": "high"
+    "created": "2025-01-04",
+    "organism": "VENOM Ω-Λ",
+    "notes": {
+      "R": "REGEN (20%) - Detect → Quarantine → Improve → Reinvest",
+      "B": "BALANCE (30%) - Stabilize → Conserve → Maintain",
+      "E": "ENTROPY (15%) - Self-Attack → Detect → Defend → Learn",
+      "O": "OPTIMIZE (30%) - Detect → Adjust → Redistribute → Restart",
+      "Λ": "Lambda wrap (5%) - Temporal multiplier coefficient"
+    },
+    "adaptive": {
+      "theta_low": 0.3,
+      "theta_high": 0.7,
+      "modes": {
+        "unwrap": {
+          "theta_range": [0.0, 0.3],
+          "weights": {
+            "R": 0.40,
+            "B": 0.30,
+            "E": 0.10,
+            "O": 0.15,
+            "Λ": 0.05
+          },
+          "description": "Conserve energy mode - REGEN priority"
+        },
+        "balance": {
+          "theta_range": [0.5, 0.7],
+          "weights": {
+            "R": 0.20,
+            "B": 0.35,
+            "E": 0.15,
+            "O": 0.25,
+            "Λ": 0.05
+          },
+          "description": "Optimal equilibrium - BALANCE priority"
+        },
+        "wrap": {
+          "theta_range": [0.7, 0.9],
+          "weights": {
+            "R": 0.15,
+            "B": 0.25,
+            "E": 0.20,
+            "O": 0.35,
+            "Λ": 0.05
+          },
+          "description": "High performance - OPTIMIZE priority"
+        },
+        "optimize": {
+          "theta_range": [0.9, 1.0],
+          "weights": {
+            "R": 0.10,
+            "B": 0.20,
+            "E": 0.10,
+            "O": 0.50,
+            "Λ": 0.10
+          },
+          "description": "Maximum power - OPTIMIZE dominant"
+        }
       }
+    },
+    "metadata": {
+      "author": "manuelstellian-dev",
+      "license": "Proprietary",
+      "organism_type": "Digital Biological System",
+      "architecture": "Ω-Λ Symbiotic"
     }
   }
 }

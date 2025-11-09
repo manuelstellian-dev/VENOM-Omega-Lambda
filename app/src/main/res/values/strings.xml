@@ -15,4 +15,9 @@
     <string name="chat_hint">Talk to VENOM…</string>
     <string name="send">Send</string>
     <string name="error_initialization">Failed to initialize VENOM organism</string>
+    <!-- Guardian Notification Channel -->
+    <string name="notification_channel_name">VENOM Guardian</string>
+    <string name="notification_channel_description">Digital immune system monitoring</string>
+    <string name="guardian_notification_title">VENOM Guardian Active</string>
+    <string name="guardian_notification_text">Protecting your digital organism</string>
 </resources>

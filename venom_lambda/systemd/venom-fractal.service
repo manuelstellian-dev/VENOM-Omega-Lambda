@@ -1,15 +1,33 @@
 [Unit]
-Description=VENOM Fractal Time Compression Service
+
+Description=VENOM Λ-Core fractal worker
+Documentation=https://github.com/manuelstellian-dev/VENOM-Omega-Lambda
 After=network.target
 
 [Service]
+
 Type=simple
-WorkingDirectory=%h/VENOM-Omega-Lambda
-ExecStart=/usr/bin/python3 -m venom_lambda.core.fractal
+User=%u
+WorkingDirectory=%h/venom/lambda/core
+ExecStart=%h/.local/bin/python3 fractal.py
 Restart=on-failure
-RestartSec=10s
-StandardOutput=journal
-StandardError=journal
+RestartSec=5
+
+# Resource limits
+MemoryMax=512M
+CPUQuota=50%
+
+# Logging
+StandardOutput=append:%h/venom/logs/fractal.log
+StandardError=append:%h/venom/logs/fractal.error.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Environment
+Environment=PYTHONUNBUFFERED=1
+Environment=VENOM_HOME=%h/venom
 
 [Install]
 WantedBy=default.target

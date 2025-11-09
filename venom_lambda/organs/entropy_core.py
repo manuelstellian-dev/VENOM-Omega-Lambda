@@ -1,59 +1,167 @@
 """
-Entropy Core (E) - Chaos engineering and defensive organ
+ENTROPY Organ (E: 15%) - Imunitate și Adaptare
+Flow: Self-Attack  Detect  Defend  Learn
 """
 
 import logging
 from typing import Dict, Any, List
 
-logger = logging.getLogger(__name__)
-
+logging.basicConfig(level=logging.INFO)
 
 class EntropyCore:
-    """Entropy Core - Implements controlled chaos and defense"""
+    """
+    Organ ENTROPY - Imunitate și Adaptare
+    Testează propriile apărări și învață din amenințări
+    """
     
-    def __init__(self):
-        self.threats = []
-        logger.info("EntropyCore initialized")
+    def __init__(self, genome: Dict[str, Any]):
+        self.genome = genome
+        self.weight = genome['weights']['E']  # 0.15
+        self.learned_threats = []
+        self.defense_count = 0
+        
+        logging.info(f"🛡️ ENTROPY Core initialized (weight: {self.weight})")
     
-    def cycle(self, system_state: Dict[str, Any]) -> Dict[str, Any]:
-        """Run entropy cycle"""
-        logger.debug("EntropyCore cycle starting")
+    def cycle(self, health_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Ciclu imunitar
         
-        # Self-attack for testing
-        self.self_attack()
+        Args:
+            health_data: System health metrics
+            
+        Returns:
+            Dict with cycle results
+        """
+        # SELF-ATTACK: Testează propriile apărări
+        vulnerabilities = self.self_attack()
         
-        # Detect threats
-        threats = self.detect_threats(system_state)
+        # DETECT: Detectează amenințări
+        threats = self.detect_threats(health_data)
         
-        # Defend against threats
-        defense = self.defend(threats)
+        # DEFEND: Apără sistemul
+        defended = self.defend(threats)
         
-        # Learn from attacks
-        learning = self.learn(threats)
+        # LEARN: Învață din amenințări
+        self.learn(threats)
         
-        result = {
-            "organ": "entropy",
+        self.defense_count += defended
+        
+        return {
+            "organ": "ENTROPY",
+            "action": "defending",
+            "vulnerabilities": len(vulnerabilities),
             "threats_detected": len(threats),
-            "defense_level": defense,
-            "learning_gain": learning
+            "defended": defended,
+            "learned": len(self.learned_threats),
+            "total_defenses": self.defense_count
         }
+    
+    def self_attack(self) -> List[str]:
+        """
+        Testează propriile apărări (ca un sistem imunitar)
         
-        logger.info(f"EntropyCore cycle complete: {result}")
-        return result
+        Returns:
+            List of detected vulnerabilities
+        """
+        test_attacks = [
+            "memory_overflow",
+            "cpu_spike",
+            "model_poisoning",
+            "cache_corruption"
+        ]
+        
+        vulnerabilities = []
+        
+        for attack in test_attacks:
+            if not self.is_defended_against(attack):
+                vulnerabilities.append(attack)
+                logging.warning(f"🔍 [ENTROPY] Vulnerability found: {attack}")
+        
+        if not vulnerabilities:
+            logging.debug(f"✅ [ENTROPY] Self-attack: all defenses intact")
+        
+        return vulnerabilities
     
-    def self_attack(self):
-        """Controlled self-attack for resilience testing"""
-        logger.debug("Self-attack initiated")
+    def detect_threats(self, health_data: Dict[str, Any]) -> List[str]:
+        """
+        Detectează amenințări reale
+        
+        Args:
+            health_data: System health metrics
+            
+        Returns:
+            List of detected threats
+        """
+        threats = []
+        
+        # CPU spike anomaly
+        cpu_health = health_data.get('cpu_health', 1.0)
+        if cpu_health < 0.1:
+            threats.append("cpu_spike")
+            logging.warning(f"⚠️ [ENTROPY] Threat detected: cpu_spike (health: {cpu_health:.2f})")
+        
+        # Memory anomaly
+        memory_health = health_data.get('memory_health', 1.0)
+        if memory_health < 0.2:
+            threats.append("memory_attack")
+            logging.warning(f"⚠️ [ENTROPY] Threat detected: memory_attack (health: {memory_health:.2f})")
+        
+        # Thermal attack (sustained overheating)
+        thermal_health = health_data.get('thermal_health', 1.0)
+        if thermal_health < 0.3:
+            threats.append("thermal_attack")
+            logging.warning(f"⚠️ [ENTROPY] Threat detected: thermal_attack (health: {thermal_health:.2f})")
+        
+        return threats
     
-    def detect_threats(self, system_state: Dict[str, Any]) -> List[str]:
-        """Detect security threats"""
-        self.threats = []
-        return self.threats
+    def defend(self, threats: List[str]) -> int:
+        """
+        Apără împotriva amenințărilor
+        
+        Args:
+            threats: List of detected threats
+            
+        Returns:
+            Number of threats defended
+        """
+        defended_count = 0
+        
+        for threat in threats:
+            if threat in self.learned_threats:
+                # Known threat - effective defense
+                logging.info(f"🛡️ [ENTROPY] Defended (known): {threat}")
+                defended_count += 1
+            else:
+                # New threat - partial defense
+                logging.info(f"🛡️ [ENTROPY] Defended (learning): {threat}")
+                defended_count += 0.5
+        
+        return int(defended_count)
     
-    def defend(self, threats: List[str]) -> float:
-        """Defend against threats"""
-        return 0.95
+    def learn(self, threats: List[str]):
+        """
+        Învață din amenințări noi
+        
+        Args:
+            threats: List of threats to learn from
+        """
+        for threat in threats:
+            if threat not in self.learned_threats:
+                self.learned_threats.append(threat)
+                logging.info(f"🧠 [ENTROPY] Learned new threat: {threat}")
+        
+        # Keep only last 100 threats
+        if len(self.learned_threats) > 100:
+            self.learned_threats = self.learned_threats[-100:]
     
-    def learn(self, threats: List[str]) -> float:
-        """Learn from attack patterns"""
-        return 0.10
+    def is_defended_against(self, attack: str) -> bool:
+        """
+        Verifică dacă e apărat împotriva unui atac
+        
+        Args:
+            attack: Attack type
+            
+        Returns:
+            True if defended
+        """
+        return attack in self.learned_threats

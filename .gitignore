@@ -1,3 +1,252 @@
+# Build, cache, IDE, and OS files
+.gradle/
+build/
+gradle-9.2.0/
+*.iml
+.idea/
+.vscode/
+*.log
+*.tmp
+*.bak
+*.swp
+__pycache__/
+.DS_Store
+Thumbs.db
+# .gitignore
+# VENOM Ω-Λ ORGANISM
+# ============================================================
+# Android / Gradle
+# ============================================================
+# Built application files
+*.apk
+*.ap_
+*.aab
+# Files for the ART/Dalvik VM
+*.dex
+# Java class files
+*.class
+# Generated files
+bin/
+gen/
+out/
+release/
+# Gradle files
+.gradle/
+build/
+*/build/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+# Local configuration file (sdk path, etc)
+local.properties
+# Android Studio
+*.iml
+.idea/
+.DS_Store
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+output.json
+# NDK
+obj/
+# IntelliJ
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/modules.xml
+.idea/misc.xml
+# Keystore files
+*.jks
+*.keystore
+# ============================================================
+# Python
+# ============================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+# C extensions
+*.so
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+# PyInstaller
+*.manifest
+*.spec
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+# Ignore Gradle distribution and archive
+gradle-9.2.0/
+gradle-9.2.0-all.zip
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+# PyCharm
+.idea/
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+# Pyre type checker
+.pyre/
+# ============================================================
+# Lambda-specific
+# ============================================================
+# Generated protobuf files
+lambda/core/*_pb2.py
+lambda/core/*_pb2_grpc.py
+lambda/core/*_pb2.pyi
+# Logs
+lambda/logs/
+*.log
+venom/logs/
+venom/run/
+# Peer registry
+.venom_peers.json
+# Python cache
+lambda/**/__pycache__/
+lambda/**/*.pyc
+# Models (large files)
+models/*.tflite
+models/*.pb
+models/*.onnx
+*.h5
+*.pth
+# Knowledge base (large files)
+knowledge/wikipedia/
+knowledge/papers/
+knowledge/code/
+knowledge/index/
+# ============================================================
+# System files
+# ============================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+# Linux
+*~
+.directory
+.Trash-*
+# ============================================================
+# IDE / Editor
+# ============================================================
+# VSCode
+.vscode/
+*.code-workspace
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+# Vim
+*.swp
+*.swo
+*~
+# Emacs
+*~
+\#*\#
+.\#*
+# ============================================================
+# VENOM-specific
+# ============================================================
+# User data
+venom/data/
+venom/cache/
+venom/temp/
+# Secrets
+secrets.json
+.env
+# Large model files
+*.tflite
+*.pb
+*.onnx
+*.bin
+# Vector databases
+*.faiss
+*.index
+# Compiled proto
+*_pb2.py
+*_pb2_grpc.py
+# Systemd logs
+systemd/*.log
+# Backup files
+*.backup
+*.bak
+# Temporary files
+tmp/
+temp/
+.tmp/
+# ============================================================
+# Testing
+# ============================================================
+# Test outputs
+test-results/
+screenshots/
+test_*.png
+test_*.jpg
+# Coverage
+.coverage
+htmlcov/
+# ============================================================
+# Documentation builds
+# ============================================================
+docs/_build/
+docs/.doctrees/
+site/
+# ============================================================
+# Misc
+# ============================================================
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+# Certificates
+*.pem
+*.crt
+*.key
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

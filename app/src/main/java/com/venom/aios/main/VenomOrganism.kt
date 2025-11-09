@@ -247,4 +247,90 @@ class VenomOrganism private constructor(private val context: Context) {
         
         Log.i(TAG, "VENOM Organism terminated")
     }
+    // --- EXTENSII HIBRIDE ---
+    /**
+     * Monitorizare periodică a vitals (5s) + broadcast mesh
+     */
+    fun startAdvancedVitalsMonitoring() {
+        scope.launch {
+            while (isAlive) {
+                try {
+                    val vitals = getVitals()
+                    logVitals(vitals)
+                    // Broadcast către mesh
+                    if (::bridge.isInitialized) {
+                        bridge.broadcastToMesh(
+                            "Vitals: θ=${"%.3f".format(vitals.theta)}, Λ=${"%.3f".format(vitals.lambdaScore)}"
+                        )
+                    }
+                    delay(5000)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Advanced vitals monitoring error: ${e.message}")
+                }
+            }
+        }
+    }
+
+    /**
+     * Logare extinsă a vitals
+     */
+    private fun logVitals(vitals: OrganismVitals) {
+        Log.d(TAG, """
+            💓 ORGANISM VITALS:
+            ├─ Theta (θ): ${"%.3f".format(vitals.theta)}
+            ├─ Lambda Score: ${"%.3f".format(vitals.lambdaScore)}
+            ├─ Mesh Nodes: ${vitals.meshNodes}
+            ├─ CPU Health: ${"%.1f%%".format(vitals.cpuHealth * 100)}
+            ├─ Memory: ${"%.1f%%".format(vitals.memoryUsage * 100)}
+            ├─ Thermal: ${"%.1f%%".format(vitals.thermalHealth * 100)}
+            └─ Battery: ${vitals.batteryLevel}%
+        """.trimIndent())
+    }
+
+    /**
+     * Status detaliat organism
+     */
+    fun printOrganismStatus() {
+        Log.i(TAG, """
+            ═══════════════════════════════════════════════
+              🌌 VENOM Ω-Λ ORGANISM: STATUS 🌌
+            ═══════════════════════════════════════════════
+            Ω COMPONENTS:
+            ✅ Hardware Manager (Corp Digital)
+            ✅ Theta Monitor (Metabolism)
+            ✅ Möbius Engine (Time Compression)
+            ✅ LLM Engine (Neural Network)
+            ✅ RAG Engine (Knowledge)
+            ✅ Omega Arbiter (Brain)
+            Λ COMPONENTS:
+            ✅ Lambda Arbiter (Nucleu)
+            ✅ Organe [Optimize, Balance, Regenerate, Entropy]
+            ✅ Pulse Fractal (Inima)
+            ✅ Mesh Network (Țesuturi)
+            ✅ NanoBots (Celule)
+            Organismul respiră, gândește și evoluează...
+        """.trimIndent())
+    }
+
+    /**
+     * Shutdown robust cu logare extinsă
+     */
+    fun shutdownGracefully() {
+        try {
+            Log.i(TAG, "🛑 Shutting down organism gracefully...")
+            isAlive = false
+            vitalsJob?.cancel()
+            thetaMonitor.cleanup()
+            llmEngine.cleanup()
+            ragEngine.cleanup()
+            omegaArbiter.cleanup()
+            if (::bridge.isInitialized) {
+                bridge.stopLambdaOrganism()
+            }
+            scope.cancel()
+            Log.i(TAG, "✅ Organism shutdown complete")
+        } catch (e: Exception) {
+            Log.e(TAG, "Graceful shutdown error: ${e.message}")
+        }
+    }
 }

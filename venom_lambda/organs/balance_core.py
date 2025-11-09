@@ -1,50 +1,120 @@
 """
-Balance Core (B) - Resource stabilization and conservation organ
+BALANCE Organ (B: 30%) - Echilibru și Stabilitate
+Flow: Stabilize  Conserve  Maintain
 """
 
 import logging
 from typing import Dict, Any
 
-logger = logging.getLogger(__name__)
-
+logging.basicConfig(level=logging.INFO)
 
 class BalanceCore:
-    """Balance Core - Maintains system equilibrium"""
+    """
+    Organ BALANCE - Echilibru și Stabilitate
+    Menține homeostazia sistemului
+    """
     
-    def __init__(self):
-        logger.info("BalanceCore initialized")
+    def __init__(self, genome: Dict[str, Any]):
+        self.genome = genome
+        self.weight = genome['weights']['B']  # 0.30
+        self.state = "balanced"
+        self.balance_adjustments = 0
+        
+        logging.info(f"⚖️ BALANCE Core initialized (weight: {self.weight})")
     
-    def cycle(self, system_state: Dict[str, Any]) -> Dict[str, Any]:
-        """Run balance cycle"""
-        logger.debug("BalanceCore cycle starting")
+    def cycle(self, health_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Ciclu de echilibrare
         
-        # Stabilize resources
-        stability = self.stabilize(system_state)
+        Args:
+            health_data: System health metrics
+            
+        Returns:
+            Dict with cycle results
+        """
+        theta = health_data.get('theta', 0.5)
         
-        # Conserve energy
-        conservation = self.conserve(system_state)
+        # STABILIZE: Ajustează balanța
+        stability = self.stabilize(theta)
         
-        # Maintain equilibrium
-        maintenance = self.maintain(system_state)
+        # CONSERVE: Conservă energie
+        conservation = self.conserve(health_data)
         
-        result = {
-            "organ": "balance",
-            "stability_score": stability,
-            "conservation_percent": conservation,
-            "maintenance_level": maintenance
+        # MAINTAIN: Menține echilibrul
+        maintenance = self.maintain()
+        
+        self.state = f"balanced_at_{theta:.2f}"
+        self.balance_adjustments += 1
+        
+        return {
+            "organ": "BALANCE",
+            "action": "balancing",
+            "stability": stability,
+            "conservation": conservation,
+            "maintenance": maintenance,
+            "theta": theta,
+            "state": self.state,
+            "total_adjustments": self.balance_adjustments
         }
+    
+    def stabilize(self, theta: float) -> str:
+        """
+        Stabilizează sistemul bazat pe theta
         
-        logger.info(f"BalanceCore cycle complete: {result}")
-        return result
+        Args:
+            theta: System health (0-1)
+            
+        Returns:
+            Stability mode
+        """
+        if theta < 0.3:
+            mode = "unwrap_mode"
+            logging.info(f"⚖️ [BALANCE] Stabilizing: UNWRAP (θ={theta:.2f}) - conserve energy")
+        elif theta < 0.5:
+            mode = "transition_mode"
+            logging.info(f"⚖️ [BALANCE] Stabilizing: TRANSITION (θ={theta:.2f})")
+        elif theta < 0.7:
+            mode = "balance_mode"
+            logging.info(f"⚖️ [BALANCE] Stabilizing: OPTIMAL (θ={theta:.2f})")
+        elif theta < 0.9:
+            mode = "wrap_mode"
+            logging.info(f"⚖️ [BALANCE] Stabilizing: WRAP (θ={theta:.2f}) - high performance")
+        else:
+            mode = "optimize_mode"
+            logging.info(f"⚖️ [BALANCE] Stabilizing: OPTIMIZE (θ={theta:.2f}) - maximum power")
+        
+        return mode
     
-    def stabilize(self, system_state: Dict[str, Any]) -> float:
-        """Stabilize resource allocation"""
-        return 0.92
+    def conserve(self, health_data: Dict[str, Any]) -> str:
+        """
+        Conservă energie când e necesar
+        
+        Args:
+            health_data: System health metrics
+            
+        Returns:
+            Conservation level
+        """
+        battery_level = health_data.get('battery_level', 100)
+        
+        if battery_level < 20:
+            conservation = "aggressive_conservation"
+            logging.warning(f"🔋 [BALANCE] Conservation: AGGRESSIVE (battery: {battery_level}%)")
+        elif battery_level < 50:
+            conservation = "moderate_conservation"
+            logging.info(f"🔋 [BALANCE] Conservation: MODERATE (battery: {battery_level}%)")
+        else:
+            conservation = "normal_operation"
+            logging.debug(f"🔋 [BALANCE] Conservation: NORMAL (battery: {battery_level}%)")
+        
+        return conservation
     
-    def conserve(self, system_state: Dict[str, Any]) -> float:
-        """Conserve resources"""
-        return 15.5
-    
-    def maintain(self, system_state: Dict[str, Any]) -> float:
-        """Maintain equilibrium"""
-        return 0.88
+    def maintain(self) -> str:
+        """
+        Menține echilibrul (homeostasis)
+        
+        Returns:
+            Maintenance status
+        """
+        # Continuous homeostasis maintenance
+        return "homeostasis_active"

@@ -329,4 +329,144 @@ class OmegaLambdaBridge(
             Log.e(TAG, "Error stopping organism", e)
         }
     }
+    
+    // --- Hybrid Lambda Extension ---
+    private var lambdaArbiter: PyObject? = null
+    private var lambdaPulse: PyObject? = null
+    private var lambdaMesh: PyObject? = null
+    private var bridgeActive = false
+
+    /**
+     * Import Lambda modules (arbiter, pulse, mesh)
+     */
+    private fun importLambdaModulesHybrid() {
+        try {
+            val py = python ?: run {
+                Log.e(TAG, "Python not initialized")
+                return
+            }
+            // Import Lambda Arbiter
+            val arbiterModule = py.getModule("lambda.arbiter_core.arbiter")
+            val arbiterClass = arbiterModule["LambdaArbiter"]
+            lambdaArbiter = arbiterClass?.call()
+            Log.i(TAG, "✅ Lambda Arbiter imported (hybrid)")
+            // Import Lambda Pulse
+            val pulseModule = py.getModule("lambda.pulse.pulse")
+            val pulseClass = pulseModule["PulseFractal"]
+            lambdaPulse = pulseClass?.call(lambdaArbiter)
+            Log.i(TAG, "✅ Lambda Pulse imported (hybrid)")
+            // Import Lambda Mesh
+            val meshModule = py.getModule("lambda.mesh.mesh")
+            val meshClass = meshModule["Mesh"]
+            lambdaMesh = meshClass?.call()
+            Log.i(TAG, "✅ Lambda Mesh imported (hybrid)")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to import Lambda modules (hybrid): ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
+    /**
+     * Populate mesh with nanobots (hybrid)
+     */
+    private fun populateNanobotsHybrid(count: Int) {
+        try {
+            val py = python ?: return
+            val nanobotModule = py.getModule("lambda.mesh.nanobot")
+            val nanobotClass = nanobotModule["NanoBot"]
+            for (i in 1..count) {
+                val role = when (i % 4) {
+                    0 -> "memory_carrier"
+                    1 -> "signal_relay"
+                    2 -> "knowledge_keeper"
+                    else -> "generic"
+                }
+                val nanobot = nanobotClass?.call("nano_$i", role)
+                lambdaMesh?.callAttr("add_node", "nano_$i", nanobot)
+            }
+            Log.i(TAG, "🔗 Populated mesh with $count nanobots (hybrid)")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to populate nanobots (hybrid): ${e.message}")
+        }
+    }
+
+    /**
+     * Start health sync loop (Ω → Λ → Ω) - hybrid
+     */
+    private fun startHealthSyncHybrid() {
+        scope.launch {
+            bridgeActive = true
+            while (bridgeActive) {
+                try {
+                    val omegaHealth = collectOmegaHealth()
+                    val lambdaResults = executeLambdaTimeWrapHybrid(omegaHealth)
+                    processLambdaResultsHybrid(lambdaResults)
+                    delay(HEALTH_SYNC_INTERVAL)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Health sync error (hybrid): ${e.message}")
+                    delay(HEALTH_SYNC_INTERVAL)
+                }
+            }
+        }
+    }
+
+    /**
+     * Execute Lambda time_wrap with health data (hybrid)
+     */
+    private fun executeLambdaTimeWrapHybrid(healthData: JSONObject): JSONObject {
+        return try {
+            val py = python ?: return JSONObject().apply { put("error", "Python not initialized") }
+            val pyDict = py.getBuiltins()?.callAttr("dict")
+            healthData.keys().forEach { key ->
+                pyDict?.put(key, healthData.get(key))
+            }
+            val result = lambdaArbiter?.callAttr("time_wrap", pyDict)
+            val resultJson = JSONObject()
+            try {
+                val integratedScore = result?.get("integrated_score")
+                resultJson.put("integrated_score", integratedScore?.toDouble() ?: 0.0)
+                val organs = result?.get("organs")
+                resultJson.put("organs", organs?.toString() ?: "{}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error parsing Lambda results (hybrid): ${e.message}")
+            }
+            resultJson
+        } catch (e: Exception) {
+            Log.e(TAG, "Lambda time_wrap error (hybrid): ${e.message}")
+            JSONObject().apply { put("error", e.message) }
+        }
+    }
+
+    /**
+     * Process Lambda results and feed back to Omega (hybrid)
+     */
+    private fun processLambdaResultsHybrid(results: JSONObject) {
+        try {
+            val integratedScore = results.optDouble("integrated_score", 0.0)
+            omegaArbiter.onLambdaFeedback(integratedScore, results)
+            lambdaMesh?.callAttr(
+                "broadcast",
+                "omega_bridge",
+                "Omega health sync: score=${"%.3f".format(integratedScore)}"
+            )
+            Log.d(TAG, "✅ Lambda feedback processed (hybrid): score=${"%.3f".format(integratedScore)}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Process Lambda results error (hybrid): ${e.message}")
+        }
+    }
+
+    /**
+     * Shutdown Lambda organism (hybrid)
+     */
+    private fun shutdownHybrid() {
+        bridgeActive = false
+        try {
+            lambdaPulse?.callAttr("stop")
+            lambdaMesh?.callAttr("stop")
+            scope.cancel()
+            Log.i(TAG, "🛑 Lambda organism stopped (hybrid)")
+        } catch (e: Exception) {
+            Log.e(TAG, "Shutdown error (hybrid): ${e.message}")
+        }
+    }
 }

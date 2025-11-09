@@ -1,15 +1,38 @@
 [Unit]
-Description=VENOM Mesh Discovery Service
-After=network.target
+
+Description=VENOM Λ-Core Mesh Discovery Daemon (UDP Multicast)
+Documentation=https://github.com/manuelstellian-dev/VENOM-Omega-Lambda
+After=network-online.target
+Wants=network-online.target
 
 [Service]
+
 Type=simple
-WorkingDirectory=%h/VENOM-Omega-Lambda
-ExecStart=/usr/bin/python3 -m venom_lambda.core.mesh_discovery
+User=%u
+WorkingDirectory=%h/venom/lambda/core
+ExecStart=%h/.local/bin/python3 mesh_discovery.py
 Restart=on-failure
-RestartSec=10s
-StandardOutput=journal
-StandardError=journal
+RestartSec=3
+
+# Resource limits
+MemoryMax=256M
+CPUQuota=25%
+
+# Logging
+StandardOutput=append:%h/venom/logs/mesh-discovery.log
+StandardError=append:%h/venom/logs/mesh-discovery.error.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Environment
+Environment=PYTHONUNBUFFERED=1
+Environment=VENOM_HOME=%h/venom
+
+# Network
+# Allow multicast (required for UDP multicast)
+RestrictAddressFamilies=AF_INET AF_INET6
 
 [Install]
 WantedBy=default.target

@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import com.venom.aios.omega.hardware.HardwareManager
 import kotlinx.coroutines.*
 import java.io.RandomAccessFile
 
@@ -19,6 +20,7 @@ class ThetaMonitor(private val context: Context) {
     
     private var isMonitoring = false
     private var monitorJob: Job? = null
+    private val hardwareManager = HardwareManager(context)
     
     // Current health metrics
     private var cpuHealth: Double = 0.8
@@ -117,12 +119,24 @@ class ThetaMonitor(private val context: Context) {
      */
     fun getMemoryHealth(): Double {
         return try {
-            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            val memInfo = ActivityManager.MemoryInfo()
-            activityManager.getMemoryInfo(memInfo)
-            
-            val availableRatio = memInfo.availMem.toDouble() / memInfo.totalMem.toDouble()
-            availableRatio.coerceIn(0.0, 1.0)
+            val mem = hardwareManager.getMemoryInfoTyped()
+            if (mem.totalRAM > 0L) {
+                val availableRatio = mem.availableRAM.toDouble() / mem.totalRAM.toDouble()
+                return availableRatio.coerceIn(0.0, 1.0)
+            }
+
+            // Fallback: try direct ActivityManager read if typed getter returned no data
+            try {
+                val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                val memInfo = ActivityManager.MemoryInfo()
+                activityManager.getMemoryInfo(memInfo)
+                val availableRatio = memInfo.availMem.toDouble() / memInfo.totalMem.toDouble()
+                return availableRatio.coerceIn(0.0, 1.0)
+            } catch (_: Exception) {
+                // ignore and fall through to default
+            }
+
+            0.7
         } catch (e: Exception) {
             Log.e(TAG, "Error reading memory health", e)
             0.7 // Default fallback
@@ -135,19 +149,58 @@ class ThetaMonitor(private val context: Context) {
      */
     fun getThermalHealth(): Double {
         return try {
+            val t = hardwareManager.getThermalInfoTyped()
+            // If typed getter gives a sensible value, use it
+            if (t.health in 0.0..1.0) return t.health.coerceIn(0.0, 1.0)
+
+            // Fallback to older logic: use platform thermal service or battery temp
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                try {
+                    val thermalStatus = context.getSystemService(Context.THERMAL_SERVICE)
+                    // best-effort: if platform service exists, we prefer it — but legacy default below
+                    return 0.8
+                } catch (_: Exception) {
+                    // continue to battery temp fallback
+                }
+            }
+
+            // Battery temp fallback
+            val temp = readBatteryTemperature()
+            calculateThermalHealthFromTemp(temp)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading thermal health", e)
+            0.7 // Default fallback
+        }
+    }
+
+    /** Legacy (non-destructive) methods kept for compatibility. */
+    fun getMemoryHealthLegacy(): Double {
+        return try {
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            val memInfo = ActivityManager.MemoryInfo()
+            activityManager.getMemoryInfo(memInfo)
+
+            val availableRatio = memInfo.availMem.toDouble() / memInfo.totalMem.toDouble()
+            availableRatio.coerceIn(0.0, 1.0)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading memory health (legacy)", e)
+            0.7
+        }
+    }
+
+    fun getThermalHealthLegacy(): Double {
+        return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val thermalStatus = context.getSystemService(Context.THERMAL_SERVICE)
-                // TODO: Implement proper thermal API usage
-                // For now, return a safe default
+                // TODO: Implement proper thermal API usage (legacy returned a safe default)
                 0.8
             } else {
-                // Fallback for older devices
                 val temp = readBatteryTemperature()
                 calculateThermalHealthFromTemp(temp)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error reading thermal health", e)
-            0.7 // Default fallback
+            Log.e(TAG, "Error reading thermal health (legacy)", e)
+            0.7
         }
     }
     

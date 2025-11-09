@@ -1,165 +1,250 @@
+#!/usr/bin/env python3
+# lambda/core/fractal.py
+
 """
-Fractal Time Compression Module
-Core mathematical functions for VENOM time manipulation
+fractal.py – VENOM Λ‑Core fractal worker
+
+Implements: Λ‑TimeWrap, Λ‑Fractal Tetrastrat, Λ‑Möbius Temporal, Λ‑Gravitational
 """
 
+import math
+import os
+import time
+import json
 import logging
 import signal
-import sys
+from pathlib import Path
 from dataclasses import dataclass
-from typing import Optional
-import math
+from typing import Tuple, List
 
-logger = logging.getLogger(__name__)
+# -------------------------------------------------------------------
+# Immutable configuration
+# -------------------------------------------------------------------
 
-
-@dataclass
+@dataclass(frozen=True)
 class Config:
-    """Configuration for fractal computations"""
-    k: float = 1.5  # Kernel multiplier
-    p: float = 0.75  # Parallel fraction
-    u: float = 0.2  # Utilization factor
-    theta: float = 0.7  # System health theta
+    theta_low: float = 0.3          # minimum resilience
+    theta_high: float = 0.7         # high resilience
+    t1: float = 1.0                 # base time unit
+    k: float = 100.0                # scaling factor
+    p: float = 10.0                 # pressure factor
+    u: float = 1e6                  # utility / workload magnitude
+    mobius_iter: int = 10           # series depth for Möbius temporal
+    log_path: Path = Path.home() / "venom" / "run" / "fractal.log"
 
+CFG = Config()
 
-def time_wrap(k: float, p: float, u: float, t1: float) -> float:
+# -------------------------------------------------------------------
+# Logging (thread‑safe, atomic append)
+# -------------------------------------------------------------------
+
+CFG.log_path.parent.mkdir(parents=True, exist_ok=True)
+
+logging.basicConfig(
+    filename=CFG.log_path,
+    level=logging.INFO,
+    format="[+] %(asctime)s %(message)s",
+    datefmt="%c",
+)
+
+def log(msg: str) -> None:
+    """Append a message to the fractal log."""
+    logging.info(msg)
+    print(f"[FRACTAL] {msg}")  # Also print to console
+
+# -------------------------------------------------------------------
+# Mathematical primitives
+# -------------------------------------------------------------------
+
+def time_wrap(k: float, p: float, u: float, t1: float = CFG.t1) -> float:
     """
-    Apply time wrapping transformation
+    Λ‑TimeWrap – finite execution time
+    
+    Formula: T_Λ = (T1 * ln(U)) / (1 - 1/(kP))
     
     Args:
-        k: Kernel multiplier
-        p: Parallel fraction
-        u: Utilization factor
-        t1: Original time
+        k: Scaling factor
+        p: Pressure factor
+        u: Utility/workload magnitude
+        t1: Base time unit
         
     Returns:
-        Wrapped time
+        Compressed time value
     """
-    if t1 <= 0:
-        return 0.0
+    if k * p == 1:
+        raise ValueError("k * p must not equal 1 (division by zero)")
     
-    # Time wrap formula: T_wrap = T1 / (k × (1 + ln(1 + p)) × (1 + u))
-    wrapped = t1 / (k * (1 + math.log(1 + p)) * (1 + u))
-    
-    logger.debug(f"time_wrap: {t1} -> {wrapped}")
-    return wrapped
+    result = (t1 * math.log(u)) / (1 - 1 / (k * p))
+    return result
 
+# State map for fractal tetrastrat
+_STATE_MAP: dict[int, Tuple[str, List[str]]] = {
+    1: ("Regen",   ["Scan", "Detect", "Quarantine", "Heal", "Improve", "Reinvest"]),
+    0: ("Neutral", ["Scan", "Detect", "Quarantine", "Heal", "Neutralize", "Stabilize"]),
+    -1: ("Entropy", ["Reinvest_neg", "Degrade", "Infect", "Spread", "Ignore", "Blind"]),
+}
 
-def fractal_total(s: float, theta: float) -> float:
+def fallback(theta: float) -> Tuple[str, List[str]]:
     """
-    Calculate fractal total speedup
+    Λ‑Fallback meta‑layer (state ∞)
     
     Args:
-        s: Sequential speedup
-        theta: System health theta
+        theta: System resilience (0-1)
         
     Returns:
-        Total speedup factor
+        Tuple of (state_name, operations)
     """
-    # Θ(θ) = 1 + ln(1 + θ)
-    theta_compressed = 1 + math.log(1 + theta)
-    
-    total = s * theta_compressed
-    logger.debug(f"fractal_total: {total} (s={s}, θ={theta})")
-    return total
+    if theta >= CFG.theta_high:
+        return "Fallback→+1", ["Regen"]
+    if theta >= CFG.theta_low:
+        return "Fallback→0", ["Neutral"]
+    return "Fallback→-1", ["Entropy"]
 
-
-def mobius_time(s: float, k: float, p: float, u: float, theta: float) -> float:
+def fractal_total(s: int, theta: float) -> Tuple[str, List[str]]:
     """
-    Calculate Möbius compressed time
+    Λ‑Fractal Tetrastrat decision
     
     Args:
-        s: Sequential time
-        k, p, u: Kernel, parallel, utilization parameters
-        theta: System health theta
+        s: State (1, 0, -1, or inf)
+        theta: System resilience
         
     Returns:
-        Compressed time
+        Tuple of (state_name, operations)
     """
-    speedup = fractal_total(k * p, theta)
-    compressed = s / speedup
-    
-    logger.debug(f"mobius_time: {s} -> {compressed}")
-    return compressed
+    if s in _STATE_MAP:
+        return _STATE_MAP[s]
+    if s == float("inf"):
+        return fallback(theta)
+    raise ValueError(f"Invalid state {s}")
 
-
-def grav_mode(s: float, theta: float, k: float, p: float, u: float) -> dict:
+def mobius_time(s: int, k: float, p: float, u: float,
+                theta: float, t1: float = CFG.t1) -> float:
     """
-    Gravitational mode calculation
+    Λ‑Möbius Temporal – time scaling per state
     
     Args:
-        s: Sequential time
-        theta, k, p, u: System parameters
+        s: State (1, 0, -1, or inf)
+        k: Scaling factor
+        p: Pressure factor
+        u: Utility magnitude
+        theta: System resilience
+        t1: Base time unit
         
     Returns:
-        Dictionary with mode results
+        Temporal scaling value
     """
-    compressed = mobius_time(s, k, p, u, theta)
-    speedup = s / compressed if compressed > 0 else 1.0
-    
-    return {
-        "original": s,
-        "compressed": compressed,
-        "speedup": speedup,
-        "theta": theta,
-        "efficiency": (speedup / (k * p)) if (k * p) > 0 else 0.0
-    }
+    if s == 1:
+        return time_wrap(k, p, u, t1)
+    if s == 0:
+        return t1 * math.log(u)
+    if s == -1:
+        # Approximate divergent series
+        return sum(t1 * ((k * p) ** i) * math.log(u) for i in range(CFG.mobius_iter))
+    if s == float("inf"):
+        _, ops = fallback(theta)
+        return len(ops) * t1
+    raise ValueError(f"Unsupported state {s}")
 
+def grav_mode(s: int, theta: float, k: float, p: float, u: float) -> Tuple[str, float]:
+    """
+    Λ‑Gravitational mode (accelerate / stagnate / brake)
+    
+    Args:
+        s: State
+        theta: System resilience
+        k: Scaling factor
+        p: Pressure factor
+        u: Utility magnitude
+        
+    Returns:
+        Tuple of (mode_name, value)
+    """
+    if s == 1:
+        return "Accelerare", time_wrap(k, p, u)
+    if s == 0:
+        return "Stagnare", CFG.t1 * math.log(u)
+    if s == -1:
+        return "Frânare", -time_wrap(k, p, u)
+    if s == float("inf"):
+        mode, _ = fallback(theta)
+        return mode, 0.0
+    raise ValueError(f"Invalid state {s}")
+
+# -------------------------------------------------------------------
+# Adaptive resilience (θ) update
+# -------------------------------------------------------------------
 
 def update_theta(theta: float, metric: float) -> float:
     """
-    Update theta based on performance metric
+    Smoothly move theta toward a normalized system metric (0‑1).
+    Positive metric raises resilience; low metric lowers it.
     
     Args:
-        theta: Current theta
-        metric: Performance metric [0.0-1.0]
+        theta: Current theta value
+        metric: Normalized system metric (0-1)
         
     Returns:
-        Updated theta
+        Updated theta value
     """
-    # Adaptive adjustment
-    adjustment = (metric - 0.5) * 0.1
-    new_theta = max(0.1, min(1.0, theta + adjustment))
-    
-    logger.debug(f"update_theta: {theta} -> {new_theta} (metric={metric})")
-    return new_theta
+    delta = 0.05 * (metric - theta)   # smoothing factor
+    return min(max(theta + delta, 0.0), 1.0)
 
+# -------------------------------------------------------------------
+# Signal handling for graceful shutdown
+# -------------------------------------------------------------------
 
-def signal_handler(signum, frame):
-    """Handle SIGTERM and SIGINT"""
-    logger.info(f"Received signal {signum}, shutting down gracefully")
-    sys.exit(0)
+_stop_requested = False
 
+def _handle_sigterm(signum, frame):
+    global _stop_requested
+    _stop_requested = True
+    log("SIGTERM received – shutting down gracefully")
 
-def main():
-    """Main entry point for standalone execution"""
-    logging.basicConfig(level=logging.INFO)
-    
-    # Register signal handlers
-    signal.signal(signal.SIGTERM, signal_handler)
-    signal.signal(signal.SIGINT, signal_handler)
-    
-    logger.info("=== VENOM Fractal Time Compression Demo ===")
-    
-    config = Config()
-    
-    # Demo calculations
-    sequential_time = 1000.0  # 1 second
-    
-    wrapped = time_wrap(config.k, config.p, config.u, sequential_time)
-    logger.info(f"Time Wrap: {sequential_time}ms -> {wrapped:.2f}ms")
-    
-    total = fractal_total(5.0, config.theta)
-    logger.info(f"Fractal Total Speedup: {total:.2f}x")
-    
-    compressed = mobius_time(sequential_time, config.k, config.p, config.u, config.theta)
-    logger.info(f"Möbius Time: {sequential_time}ms -> {compressed:.2f}ms")
-    
-    grav = grav_mode(sequential_time, config.theta, config.k, config.p, config.u)
-    logger.info(f"Gravitational Mode: {grav}")
-    
-    logger.info("=== Demo Complete ===")
+signal.signal(signal.SIGINT, _handle_sigterm)
+signal.signal(signal.SIGTERM, _handle_sigterm)
 
+# -------------------------------------------------------------------
+# Main worker loop
+# -------------------------------------------------------------------
+
+def main() -> None:
+    """Entry point for the Λ‑Fractal worker."""
+    theta = 0.5  # initial resilience; can be derived from health checks
+    log("Λ‑Fractal worker started")
+    
+    cycle_count = 0
+    
+    while not _stop_requested:
+        cycle_count += 1
+        
+        # ----------------------------------------------------------
+        # Decision based on the "infinite" fallback state
+        # ----------------------------------------------------------
+        state, ops = fractal_total(float("inf"), theta)
+        t_effective = time_wrap(CFG.k, CFG.p, CFG.u)
+        
+        log(f"Cycle {cycle_count}: Θ={theta:.2f} | State={state} | Ops={ops} | TΛ={t_effective:.4f}")
+        
+        # ----------------------------------------------------------
+        # Simulated execution of each operation
+        # ----------------------------------------------------------
+        for op in ops:
+            log(f" → Executing {op}")
+        
+        # ----------------------------------------------------------
+        # Example metric: normalized 1‑minute load average
+        # ----------------------------------------------------------
+        try:
+            load_norm = min(max(os.getloadavg()[0] / os.cpu_count(), 0.0), 1.0)
+        except:
+            load_norm = 0.5  # Fallback if getloadavg not available
+        
+        theta = update_theta(theta, load_norm)
+        
+        # Sleep a real second – represents compressed logical time
+        time.sleep(1)
+    
+    log(f"Λ‑Fractal worker stopped after {cycle_count} cycles")
 
 if __name__ == "__main__":
     main()

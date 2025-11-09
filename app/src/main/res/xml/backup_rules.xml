@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <!-- Exclude certain files from backup -->
+    <!-- Include critical data -->
+    <include domain="file" path="models/" />
+    <include domain="file" path="knowledge/" />
+    <!-- Exclude cache/temp and device prefs -->
+    <exclude domain="file" path="cache/" />
+    <exclude domain="file" path="temp/" />
     <exclude domain="sharedpref" path="device_prefs.xml" />
 </full-backup-content>

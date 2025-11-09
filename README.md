@@ -1,7 +1,59 @@
+
 # VENOM Ω-AIOS + Λ-Genesis
 
 🌌 **Revolutionary Digital Living System** - A biological-inspired computational organism combining Ω-AIOS (Android Brain) with Λ-Genesis (Python Organs).
 
+<p align="center">
+  <img src="assets/diagrams/venom_logo.png" alt="VENOM Logo" width="180"/>
+</p>
+
+> "Life finds a way... in code." 🌱
+> <sub>— VENOM Team</sub>
+
+## 🏅 Credits
+
+| Name                | Role                | Contact                       |
+|---------------------|---------------------|-------------------------------|
+| Manuel Stellian     | Lead Architect      | manuelstellian.dev@gmail.com  |
+| VENOM Team          | Core Development    | github.com/manuelstellian-dev |
+| Contributors        | Community           | See GitHub Contributors       |
+
+## 📧 Contact
+
+- Issues: [GitHub Issues](https://github.com/manuelstellian-dev/VENOM-Omega-Lambda/issues)
+- Discussions: [GitHub Discussions](https://github.com/manuelstellian-dev/VENOM-Omega-Lambda/discussions)
+- Email: manuelstellian.dev@gmail.com
+- Twitter: [@stellian_dev](https://twitter.com/stellian_dev)
+- LinkedIn: [Manuel Stellian](https://linkedin.com/in/manuelstellian)
+
+## 🧬 Advanced Examples
+
+### Android: Broadcast Mesh Example
+```kotlin
+val mesh = organism.getMesh()
+mesh.broadcast("node-1", mapOf("type" to "heartbeat", "value" to 42))
+val vitals = mesh.getVitals()
+println(vitals)
+```
+
+### Python: Fractal Pulse Example
+```python
+from venom_lambda.pulse import Pulse
+pulse = Pulse()
+pulse.start()
+print(pulse.status())
+```
+
+### API: FastAPI Endpoint Example
+```python
+from fastapi import FastAPI
+from venom_lambda.core.fractal import Fractal
+app = FastAPI()
+
+@app.get("/fractal")
+def get_fractal():
+    return {"value": Fractal().compute()}
+```
 [![Android CI](https://github.com/manuelstellian-dev/VENOM-Omega-Lambda/actions/workflows/android.yml/badge.svg)](https://github.com/manuelstellian-dev/VENOM-Omega-Lambda/actions/workflows/android.yml)
 [![Python CI](https://github.com/manuelstellian-dev/VENOM-Omega-Lambda/actions/workflows/python.yml/badge.svg)](https://github.com/manuelstellian-dev/VENOM-Omega-Lambda/actions/workflows/python.yml)
 

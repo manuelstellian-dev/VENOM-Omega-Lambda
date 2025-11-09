@@ -4,80 +4,120 @@ import android.content.Context
 import android.util.Log
 import org.json.JSONObject
 import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.gpu.GpuDelegate
+import org.tensorflow.lite.nnapi.NnApiDelegate
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlinx.coroutines.*
 
 /**
  * LLMEngine - Large Language Model inference engine
- * 
- * Supports multiple inference modes with automatic fallback:
- * NNAPI → GPU → CPU
+ * Inference chain: NNAPI (NPU) → GPU → CPU (fallback)
+ * Suportă 3 moduri: LITE (quantized), BALANCED (standard), FULL (full precision)
  */
 class LLMEngine(private val context: Context) {
     private val TAG = "LLMEngine"
-    
+
     enum class InferenceMode {
         LITE,      // Quantized, fast
         BALANCED,  // Standard precision
         FULL       // Full precision, slow
     }
-    
+
     private var interpreter: Interpreter? = null
     private var currentMode: InferenceMode = InferenceMode.BALANCED
+    private var currentDelegate: Any? = null
     private var modelLoaded = false
-    
+
+    // Model paths
+    private val modelsDir = File(context.filesDir, "models/omega")
+    private val liteModelPath = File(modelsDir, "omega_model_lite.tflite")
+    private val standardModelPath = File(modelsDir, "omega_model.tflite")
+    private val fullModelPath = File(modelsDir, "omega_model_full.tflite")
+
+    // Vocab și tokenizer
+    private val vocabSize = 32000 // Placeholder
+    private val maxLength = 512
+
+    init {
+        loadModel()
+    }
+
     /**
-     * Load model from assets
-     * @param modelPath Path to .tflite model file
+     * Load model based on current mode
      */
-    fun loadModel(modelPath: String = "omega_model.tflite") {
+    fun loadModel() {
         try {
-            Log.i(TAG, "Loading model: $modelPath")
-            
-            val modelFile = File(context.filesDir, "models/$modelPath")
+            interpreter?.close()
+            currentDelegate?.let {
+                when (it) {
+                    is NnApiDelegate -> it.close()
+                    is GpuDelegate -> it.close()
+                }
+            }
+
+            val modelFile = when (currentMode) {
+                InferenceMode.LITE -> liteModelPath
+                InferenceMode.BALANCED -> standardModelPath
+                InferenceMode.FULL -> fullModelPath
+            }
+
+            // Ensure model exists
             if (!modelFile.exists()) {
-                Log.w(TAG, "Model file not found, using stub mode")
-                modelLoaded = false
-                return
+                Log.w(TAG, "Model not found: ${modelFile.name}, using standard model")
+                // Fallback to standard model
+                if (!standardModelPath.exists()) {
+                    Log.e(TAG, "No models available!")
+                    modelLoaded = false
+                    return
+                }
             }
-            
+
             val options = Interpreter.Options().apply {
-                // Try NNAPI first
+                // Try NPU first (NNAPI)
                 if (isNNAPISupported()) {
-                    setUseNNAPI(true)
-                    Log.d(TAG, "Using NNAPI acceleration")
+                    val nnapi = NnApiDelegate()
+                    addDelegate(nnapi)
+                    currentDelegate = nnapi
+                    Log.i(TAG, "✅ Using NPU acceleration (NNAPI)")
                 }
-                // Fallback to GPU
+                // Try GPU dacă NNAPI nu e disponibil
                 else if (isGPUSupported()) {
-                    setNumThreads(4)
-                    Log.d(TAG, "Using GPU acceleration")
+                    val gpu = GpuDelegate()
+                    addDelegate(gpu)
+                    currentDelegate = gpu
+                    Log.i(TAG, "✅ Using GPU acceleration")
                 }
-                // Fallback to CPU
+                // CPU fallback
                 else {
-                    setNumThreads(4)
-                    Log.d(TAG, "Using CPU inference")
+                    val numThreads = Runtime.getRuntime().availableProcessors()
+                    setNumThreads(numThreads)
+                    Log.i(TAG, "⚠️ Using CPU ($numThreads threads)")
                 }
             }
-            
-            interpreter = Interpreter(modelFile, options)
+
+            interpreter = Interpreter(
+                if (modelFile.exists()) modelFile else standardModelPath,
+                options
+            )
             modelLoaded = true
-            Log.i(TAG, "Model loaded successfully")
-            
+            Log.i(TAG, "✅ Model loaded: ${currentMode.name}")
+
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to load model", e)
+            Log.e(TAG, "Failed to load model: ${e.message}")
+            e.printStackTrace()
             modelLoaded = false
         }
     }
     
     /**
-     * Set inference mode
-     * @param mode The inference mode to use
+     * Set inference mode and reload model
      */
     fun setMode(mode: InferenceMode) {
+        if (currentMode == mode) return
         currentMode = mode
-        Log.d(TAG, "Inference mode set to: $mode")
-        
+        Log.i(TAG, "Switching to mode: ${mode.name}")
         when (mode) {
             InferenceMode.LITE -> switchToQuantizedModel()
             InferenceMode.BALANCED -> switchToStandardModel()
@@ -86,27 +126,47 @@ class LLMEngine(private val context: Context) {
     }
     
     /**
-     * Generate response from prompt
-     * @param prompt Input text prompt
-     * @param context Additional context
-     * @return Generated response
+     * Generate response from prompt (suspend, coroutine)
      */
-    fun generateResponse(prompt: String, context: String = ""): String {
+    suspend fun generateResponse(
+        prompt: String,
+        ragContext: String = ""
+    ): String = withContext(Dispatchers.Default) {
         if (!modelLoaded || interpreter == null) {
             Log.w(TAG, "Model not loaded, returning stub response")
-            return generateStubResponse(prompt)
+            return@withContext generateStubResponse(prompt)
         }
-        
-        return try {
-            Log.d(TAG, "Generating response for: $prompt")
-            
-            // TODO: Implement actual model inference
-            // For now, return a stub response
-            generateStubResponse(prompt)
-            
+        try {
+            // 1. Augment prompt cu RAG context
+            val augmentedPrompt = if (ragContext.isNotEmpty()) {
+                "$ragContext\n\nUser: $prompt\nAssistant:"
+            } else {
+                "User: $prompt\nAssistant:"
+            }
+
+            // 2. Tokenize
+            val tokens = tokenize(augmentedPrompt)
+
+            // 3. Prepare input tensor
+            val inputBuffer = prepareInput(tokens)
+
+            // 4. Prepare output tensor
+            val outputBuffer = ByteBuffer.allocateDirect(vocabSize * 4).apply {
+                order(ByteOrder.nativeOrder())
+            }
+
+            // 5. Run inference
+            interpreter?.run(inputBuffer, outputBuffer)
+
+            // 6. Decode output
+            val response = decodeOutput(outputBuffer)
+
+            Log.d(TAG, "Generated response (${response.length} chars)")
+            response
+
         } catch (e: Exception) {
-            Log.e(TAG, "Inference error", e)
-            "I apologize, I encountered an error processing your request."
+            Log.e(TAG, "Generation error: ${e.message}")
+            "I encountered an error processing your request."
         }
     }
     
@@ -119,22 +179,25 @@ class LLMEngine(private val context: Context) {
     }
     
     /**
-     * Check if NNAPI is supported
+     * Check if NNAPI (NPU) is supported
      */
     fun isNNAPISupported(): Boolean {
         return try {
-            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O_MR1
+            val delegate = NnApiDelegate()
+            delegate.close()
+            true
         } catch (e: Exception) {
             false
         }
     }
-    
+
     /**
-     * Check if GPU acceleration is supported
+     * Check if GPU is supported
      */
     fun isGPUSupported(): Boolean {
         return try {
-            // TODO: Implement actual GPU check
+            val delegate = GpuDelegate()
+            delegate.close()
             true
         } catch (e: Exception) {
             false
@@ -142,34 +205,31 @@ class LLMEngine(private val context: Context) {
     }
     
     /**
-     * Switch to quantized (LITE) model
+     * Switch to quantized model (INT8)
      */
     fun switchToQuantizedModel() {
-        Log.i(TAG, "Switching to quantized model")
-        // TODO: Load quantized variant
         currentMode = InferenceMode.LITE
+        loadModel()
     }
-    
+
     /**
-     * Switch to standard (BALANCED) model
+     * Switch to standard model (FP16)
      */
     fun switchToStandardModel() {
-        Log.i(TAG, "Switching to standard model")
-        // TODO: Load standard variant
         currentMode = InferenceMode.BALANCED
+        loadModel()
     }
-    
+
     /**
-     * Switch to full precision (FULL) model
+     * Switch to full precision model (FP32)
      */
     fun switchToFullModel() {
-        Log.i(TAG, "Switching to full model")
-        // TODO: Load full precision variant
         currentMode = InferenceMode.FULL
+        loadModel()
     }
     
     /**
-     * Get engine status
+     * Get engine status (JSON)
      */
     fun getStatus(): JSONObject {
         return JSONObject().apply {
@@ -181,11 +241,58 @@ class LLMEngine(private val context: Context) {
     }
     
     /**
+     * Tokenize (placeholder)
+     */
+    private fun tokenize(text: String): IntArray {
+        // Simple character-level tokenization (placeholder)
+        // În producție, folosește SentencePiece/BPE
+        return text.take(maxLength)
+            .map { it.code % vocabSize }
+            .toIntArray()
+    }
+
+    /**
+     * Prepare input tensor
+     */
+    private fun prepareInput(tokens: IntArray): ByteBuffer {
+        val buffer = ByteBuffer.allocateDirect(tokens.size * 4).apply {
+            order(ByteOrder.nativeOrder())
+        }
+        tokens.forEach { token -> buffer.putInt(token) }
+        buffer.rewind()
+        return buffer
+    }
+
+    /**
+     * Decode output (placeholder)
+     */
+    private fun decodeOutput(buffer: ByteBuffer): String {
+        buffer.rewind()
+        val logits = FloatArray(vocabSize)
+        val floatBuffer = buffer.asFloatBuffer()
+        floatBuffer.get(logits)
+        val topTokenId = logits.indices.maxByOrNull { logits[it] } ?: 0
+        return buildString {
+            append("Generated response based on input. ")
+            append("(Token ID: $topTokenId) ")
+            append("This is a placeholder implementation. ")
+            append("Replace with actual LLM inference.")
+        }
+    }
+
+    /**
      * Cleanup resources
      */
     fun cleanup() {
         interpreter?.close()
+        currentDelegate?.let {
+            when (it) {
+                is NnApiDelegate -> it.close()
+                is GpuDelegate -> it.close()
+            }
+        }
         interpreter = null
+        currentDelegate = null
         modelLoaded = false
         Log.i(TAG, "LLMEngine cleaned up")
     }

@@ -1,16 +1,36 @@
 [Unit]
-Description=VENOM Mesh Orchestrator Service
-After=network.target venom-mesh-discovery.service
+
+Description=VENOM Λ-Core Mesh Orchestrator
+Documentation=https://github.com/manuelstellian-dev/VENOM-Omega-Lambda
+After=venom-mesh-discovery.service venom-api.service
 Requires=venom-mesh-discovery.service
+Wants=venom-api.service
 
 [Service]
+
 Type=simple
-WorkingDirectory=%h/VENOM-Omega-Lambda
-ExecStart=/usr/bin/python3 -m venom_lambda.core.venom_mesh_orchestrator
+User=%u
+WorkingDirectory=%h/venom/lambda/core
+ExecStart=%h/.local/bin/python3 venom-mesh-orchestrator.py
 Restart=on-failure
-RestartSec=10s
-StandardOutput=journal
-StandardError=journal
+RestartSec=5
+
+# Resource limits
+MemoryMax=512M
+CPUQuota=50%
+
+# Logging
+StandardOutput=append:%h/venom/logs/orchestrator.log
+StandardError=append:%h/venom/logs/orchestrator.error.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Environment
+Environment=PYTHONUNBUFFERED=1
+Environment=VENOM_HOME=%h/venom
+Environment=VENOM_HEALTH_INTERVAL=5
 
 [Install]
 WantedBy=default.target

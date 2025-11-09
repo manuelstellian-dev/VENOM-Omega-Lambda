@@ -1,8 +1,10 @@
+// settings.gradle.kts (Hibrid VENOM)
 pluginManagement {
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven { url = uri("https://chaquo.com/maven") }
     }
 }
 
